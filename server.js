@@ -1,18 +1,29 @@
-import express from "express";
-import bodyParser from "body-parser";
+const express = require("express");
+const bodyParser = require("body-parser");
+const { createPayment } = require("./dana");
 
 const app = express();
 app.use(bodyParser.json());
 
-// ✅ Webhook: DANA akan kirim data ke sini saat pembayaran selesai
-app.post("/api/dana/finish-payment", (req, res) => {
-  console.log("Finish Payment Notification:", req.body);
-  res.status(200).send("OK");
+// ✅ Tes server
+app.get("/", (req, res) => {
+  res.send("Server berjalan di Render 🚀");
 });
 
-// ✅ Webhook: DANA akan kirim data ke sini saat disbursement selesai
-app.post("/api/dana/disburse-notify", (req, res) => {
-  console.log("Disburse Notification:", req.body);
+// ✅ Buat transaksi ke DANA Sandbox
+app.post("/api/dana/pay", async (req, res) => {
+  try {
+    const { orderId, amount } = req.body;
+    const result = await createPayment(orderId, amount);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Gagal membuat transaksi" });
+  }
+});
+
+// ✅ Webhook notifikasi pembayaran
+app.post("/api/dana/finish-payment", (req, res) => {
+  console.log("📩 Notifikasi DANA:", req.body);
   res.status(200).send("OK");
 });
 
